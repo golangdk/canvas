@@ -28,6 +28,10 @@ type Options struct {
 }
 
 func New(opts Options) *Server {
+	if opts.Log == nil {
+		opts.Log = zap.NewNop()
+	}
+
 	address := net.JoinHostPort(opts.Host, strconv.Itoa(opts.Port))
 	mux := chi.NewMux()
 	return &Server{
