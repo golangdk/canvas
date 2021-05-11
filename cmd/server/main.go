@@ -3,14 +3,15 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"os/signal"
 	"strconv"
-	"sync"
 	"syscall"
 
 	"go.uber.org/zap"
+	"golang.org/x/sync/errgroup"
 
 	"canvas/server"
 )
@@ -37,10 +38,6 @@ func start() int {
 		_ = log.Sync()
 	}()
 
-	wg := sync.WaitGroup{}
-	signals := make(chan os.Signal, 1)
-	signal.Notify(signals, syscall.SIGTERM, syscall.SIGINT)
-
 	host := getStringOrDefault("HOST", "localhost")
 	port := getIntOrDefault("PORT", 8080)
 
@@ -50,22 +47,27 @@ func start() int {
 		Port: port,
 	})
 
-	go func() {
-		<-signals
-		if err := s.Stop(); err != nil {
-			log.Error("Error stopping server", zap.Error(err))
-		}
-		wg.Done()
-	}()
+	var eg errgroup.Group
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGTERM, syscall.SIGINT)
+	defer stop()
 
-	wg.Add(1)
+	eg.Go(func() error {
+		<-ctx.Done()
+		if err := s.Stop(); err != nil {
+			log.Info("Error stopping server", zap.Error(err))
+			return err
+		}
+		return nil
+	})
+
 	if err := s.Start(); err != nil {
-		log.Error("Error starting server", zap.Error(err))
+		log.Info("Error starting server", zap.Error(err))
 		return 1
 	}
 
-	wg.Wait()
-
+	if err := eg.Wait(); err != nil {
+		return 1
+	}
 	return 0
 }
 
