@@ -10,6 +10,8 @@ import (
 )
 
 func TestServer_Start(t *testing.T) {
+	integrationtest.SkipIfShort(t)
+
 	t.Run("starts the server and listens for requests", func(t *testing.T) {
 		is := is.New(t)
 
