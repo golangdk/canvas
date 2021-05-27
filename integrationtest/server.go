@@ -2,6 +2,7 @@ package integrationtest
 
 import (
 	"net/http"
+	"testing"
 	"time"
 
 	"canvas/server"
@@ -35,5 +36,12 @@ func CreateServer() func() {
 		if err := s.Stop(); err != nil {
 			panic(err)
 		}
+	}
+}
+
+// SkipIfShort skips t if the "-short" flag is passed to "go test".
+func SkipIfShort(t *testing.T) {
+	if testing.Short() {
+		t.SkipNow()
 	}
 }
