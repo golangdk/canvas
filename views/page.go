@@ -16,6 +16,7 @@ func Page(title, path string, body ...g.Node) g.Node {
 			Link(Rel("stylesheet"), Href("https://unpkg.com/tailwindcss@2.1.2/dist/base.min.css")),
 			Link(Rel("stylesheet"), Href("https://unpkg.com/tailwindcss@2.1.2/dist/components.min.css")),
 			Link(Rel("stylesheet"), Href("https://unpkg.com/@tailwindcss/typography@0.4.0/dist/typography.min.css")),
+			Link(Rel("stylesheet"), Href("https://unpkg.com/@tailwindcss/forms@0.3.3/dist/forms.min.css")),
 			Link(Rel("stylesheet"), Href("https://unpkg.com/tailwindcss@2.1.2/dist/utilities.min.css")),
 		},
 		Body: []g.Node{
