@@ -13,6 +13,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"go.uber.org/zap"
 
+	"canvas/messaging"
 	"canvas/storage"
 )
 
@@ -21,6 +22,7 @@ type Server struct {
 	database *storage.Database
 	log      *zap.Logger
 	mux      chi.Router
+	queue    *messaging.Queue
 	server   *http.Server
 }
 
@@ -29,6 +31,7 @@ type Options struct {
 	Host     string
 	Log      *zap.Logger
 	Port     int
+	Queue    *messaging.Queue
 }
 
 func New(opts Options) *Server {
@@ -43,6 +46,7 @@ func New(opts Options) *Server {
 		database: opts.Database,
 		log:      opts.Log,
 		mux:      mux,
+		queue:    opts.Queue,
 		server: &http.Server{
 			Addr:              address,
 			Handler:           mux,

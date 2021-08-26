@@ -21,20 +21,36 @@ type signupperMock struct {
 
 func (s *signupperMock) SignupForNewsletter(ctx context.Context, email model.Email) (string, error) {
 	s.email = email
-	return "", nil
+	return "123", nil
+}
+
+type senderMock struct {
+	m model.Message
+}
+
+func (s *senderMock) Send(ctx context.Context, m model.Message) error {
+	s.m = m
+	return nil
 }
 
 func TestNewsletterSignup(t *testing.T) {
 	mux := chi.NewMux()
 	s := &signupperMock{}
-	handlers.NewsletterSignup(mux, s)
+	q := &senderMock{}
+	handlers.NewsletterSignup(mux, s, q)
 
-	t.Run("signs up a valid email address", func(t *testing.T) {
+	t.Run("signs up a valid email address and sends a message", func(t *testing.T) {
 		is := is.New(t)
 		code, _, _ := makePostRequest(mux, "/newsletter/signup", createFormHeader(),
 			strings.NewReader("email=me%40example.com"))
 		is.Equal(http.StatusFound, code)
 		is.Equal(model.Email("me@example.com"), s.email)
+
+		is.Equal(q.m, model.Message{
+			"job":   "confirmation_email",
+			"email": "me@example.com",
+			"token": "123",
+		})
 	})
 
 	t.Run("rejects an invalid email address", func(t *testing.T) {
