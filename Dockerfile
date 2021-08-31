@@ -1,4 +1,4 @@
-FROM golang:1.16-buster AS builder
+FROM golang:1.17-buster AS builder
 WORKDIR /src
 
 COPY go.mod go.sum ./
