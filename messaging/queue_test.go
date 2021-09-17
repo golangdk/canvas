@@ -36,4 +36,19 @@ func TestQueue(t *testing.T) {
 		is.NoErr(err)
 		is.Equal(nil, m)
 	})
+
+	t.Run("receive does not return an error if the context is already cancelled", func(t *testing.T) {
+		is := is.New(t)
+
+		queue, cleanup := integrationtest.CreateQueue()
+		defer cleanup()
+
+		err := queue.Send(context.Background(), model.Message{})
+
+		ctx, cancel := context.WithCancel(context.Background())
+		cancel()
+		m, _, err := queue.Receive(ctx)
+		is.NoErr(err)
+		is.Equal(nil, m)
+	})
 }

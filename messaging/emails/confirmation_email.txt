@@ -1,0 +1,7 @@
+Confirm your subscription to the Canvas newsletter by clicking the link below:
+
+{{action_url}}
+
+Canvas
+Some Street
+Earth

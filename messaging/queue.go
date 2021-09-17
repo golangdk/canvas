@@ -4,6 +4,7 @@ package messaging
 import (
 	"context"
 	"encoding/json"
+	"strings"
 	"sync"
 	"time"
 
@@ -76,6 +77,9 @@ func (q *Queue) Receive(ctx context.Context) (*model.Message, string, error) {
 		WaitTimeSeconds: int32(q.waitTime.Seconds()),
 	})
 	if err != nil {
+		if strings.Contains(err.Error(), "context canceled") {
+			return nil, "", nil
+		}
 		return nil, "", err
 	}
 
