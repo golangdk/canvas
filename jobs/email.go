@@ -9,12 +9,12 @@ import (
 	"canvas/model"
 )
 
-type emailSender interface {
+type newsletterconfirmationEmailSender interface {
 	SendNewsletterConfirmationEmail(ctx context.Context, to model.Email, token string) error
 }
 
 // SendNewsletterConfirmationEmail to a newsletter subscriber.
-func SendNewsletterConfirmationEmail(r registry, es emailSender) {
+func SendNewsletterConfirmationEmail(r registry, es newsletterconfirmationEmailSender) {
 	r.Register("confirmation_email", func(ctx context.Context, m model.Message) error {
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()

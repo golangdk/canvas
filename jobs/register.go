@@ -1,5 +1,5 @@
 package jobs
 
-func (r *Runner) setupJobs() {
+func (r *Runner) registerJobs() {
 	SendNewsletterConfirmationEmail(r, r.emailer)
 }

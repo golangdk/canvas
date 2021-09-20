@@ -24,17 +24,18 @@ func (m *mockConfirmationEmailer) SendNewsletterConfirmationEmail(ctx context.Co
 }
 
 func TestSendConfirmationEmail(t *testing.T) {
+	r := testRegistry{}
+
 	t.Run("passes the recipient email and token to the email sender", func(t *testing.T) {
 		is := is.New(t)
 
-		r := testRegistry{}
 		emailer := &mockConfirmationEmailer{}
 		jobs.SendNewsletterConfirmationEmail(r, emailer)
 
-		fn, ok := r["confirmation_email"]
+		job, ok := r["confirmation_email"]
 		is.True(ok)
 
-		err := fn(context.Background(), model.Message{"email": "you@example.com", "token": "123"})
+		err := job(context.Background(), model.Message{"email": "you@example.com", "token": "123"})
 		is.NoErr(err)
 
 		is.Equal("you@example.com", emailer.to.String())
@@ -44,12 +45,11 @@ func TestSendConfirmationEmail(t *testing.T) {
 	t.Run("errors on email sending failure", func(t *testing.T) {
 		is := is.New(t)
 
-		r := testRegistry{}
 		emailer := &mockConfirmationEmailer{err: errors.New("wire is cut")}
 		jobs.SendNewsletterConfirmationEmail(r, emailer)
-		fn := r["confirmation_email"]
+		job := r["confirmation_email"]
 
-		err := fn(context.Background(), model.Message{"email": "you@example.com", "token": "123"})
+		err := job(context.Background(), model.Message{"email": "you@example.com", "token": "123"})
 		is.True(err != nil)
 	})
 }

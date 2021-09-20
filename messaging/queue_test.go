@@ -43,6 +43,7 @@ func TestQueue(t *testing.T) {
 		queue, cleanup := integrationtest.CreateQueue()
 		defer cleanup()
 
+		// Send first, to get the queue URL when the context is not cancelled
 		err := queue.Send(context.Background(), model.Message{})
 
 		ctx, cancel := context.WithCancel(context.Background())

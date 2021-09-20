@@ -2,7 +2,6 @@ package jobs_test
 
 import (
 	"context"
-	"sync"
 	"testing"
 
 	"github.com/matryer/is"
@@ -37,9 +36,6 @@ func TestRunner_Start(t *testing.T) {
 			Queue: queue,
 		})
 
-		var wg sync.WaitGroup
-		wg.Add(1)
-
 		ctx, cancel := context.WithCancel(context.Background())
 
 		runner.Register("test", func(ctx context.Context, m model.Message) error {
@@ -48,15 +44,14 @@ func TestRunner_Start(t *testing.T) {
 			is.Equal("bar", foo)
 
 			cancel()
-			wg.Done()
 			return nil
 		})
 
 		err := queue.Send(context.Background(), model.Message{"job": "test", "foo": "bar"})
 		is.NoErr(err)
 
+		// This blocks until the context is cancelled by the job function
 		runner.Start(ctx)
-		wg.Wait()
 
 		is.Equal(3, logs.Len())
 		is.Equal("Starting", logs.All()[0].Message)

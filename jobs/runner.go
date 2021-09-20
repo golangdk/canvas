@@ -46,7 +46,7 @@ type Func = func(context.Context, model.Message) error
 // Start the Runner, blocking until the given context is cancelled.
 func (r *Runner) Start(ctx context.Context) {
 	r.log.Info("Starting")
-	r.setupJobs()
+	r.registerJobs()
 	var wg sync.WaitGroup
 
 	for {
