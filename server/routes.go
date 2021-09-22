@@ -10,4 +10,6 @@ func (s *Server) setupRoutes() {
 	handlers.FrontPage(s.mux)
 	handlers.NewsletterSignup(s.mux, s.database, s.queue)
 	handlers.NewsletterThanks(s.mux)
+	handlers.NewsletterConfirm(s.mux, s.database, s.queue)
+	handlers.NewsletterConfirmed(s.mux)
 }

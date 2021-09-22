@@ -52,3 +52,46 @@ func NewsletterThanks(mux chi.Router) {
 		_ = views.NewsletterThanksPage("/newsletter/thanks").Render(w)
 	})
 }
+
+type confirmer interface {
+	ConfirmNewsletterSignup(ctx context.Context, token string) (*model.Email, error)
+}
+
+func NewsletterConfirm(mux chi.Router, s confirmer, q sender) {
+	mux.Get("/newsletter/confirm", func(w http.ResponseWriter, r *http.Request) {
+		token := r.FormValue("token")
+
+		_ = views.NewsletterConfirmPage("/newsletter/confirm", token).Render(w)
+	})
+
+	mux.Post("/newsletter/confirm", func(w http.ResponseWriter, r *http.Request) {
+		token := r.FormValue("token")
+
+		email, err := s.ConfirmNewsletterSignup(r.Context(), token)
+		if err != nil {
+			http.Error(w, "error saving email address confirmation, refresh to try again", http.StatusBadGateway)
+			return
+		}
+		if email == nil {
+			http.Error(w, "bad token", http.StatusBadRequest)
+			return
+		}
+
+		err = q.Send(r.Context(), model.Message{
+			"job":   "welcome_email",
+			"email": email.String(),
+		})
+		if err != nil {
+			http.Error(w, "error saving email address confirmation, refresh to try again", http.StatusBadGateway)
+			return
+		}
+
+		http.Redirect(w, r, "/newsletter/confirmed", http.StatusFound)
+	})
+}
+
+func NewsletterConfirmed(mux chi.Router) {
+	mux.Get("/newsletter/confirmed", func(w http.ResponseWriter, r *http.Request) {
+		_ = views.NewsletterConfirmedPage("/newsletter/confirmed").Render(w)
+	})
+}

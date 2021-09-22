@@ -77,6 +77,22 @@ func (e *Emailer) SendNewsletterConfirmationEmail(ctx context.Context, to model.
 	})
 }
 
+// SendNewsletterWelcomeEmail with just the web app URL.
+func (e *Emailer) SendNewsletterWelcomeEmail(ctx context.Context, to model.Email) error {
+	keywords := map[string]string{
+		"base_url": e.baseURL,
+	}
+
+	return e.send(ctx, requestBody{
+		MessageStream: marketingMessageStream,
+		From:          e.marketingFrom,
+		To:            to.String(),
+		Subject:       "Welcome to the Canvas newsletter",
+		HtmlBody:      getEmail("welcome_email.html", keywords),
+		TextBody:      getEmail("welcome_email.txt", keywords),
+	})
+}
+
 // requestBody used in Emailer.send.
 // See https://postmarkapp.com/developer/user-guide/send-email-with-api
 type requestBody struct {

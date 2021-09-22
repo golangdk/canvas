@@ -61,6 +61,36 @@ func TestNewsletterSignup(t *testing.T) {
 	})
 }
 
+type confirmerMock struct {
+	token string
+}
+
+func (c *confirmerMock) ConfirmNewsletterSignup(ctx context.Context, token string) (*model.Email, error) {
+	c.token = token
+	email := model.Email("me@example.com")
+	return &email, nil
+}
+
+func TestNewsletterConfirm(t *testing.T) {
+	t.Run("confirms the newsletter signup and sends a message", func(t *testing.T) {
+		is := is.New(t)
+		mux := chi.NewMux()
+		c := &confirmerMock{}
+		q := &senderMock{}
+		handlers.NewsletterConfirm(mux, c, q)
+
+		code, _, _ := makePostRequest(mux, "/newsletter/confirm", createFormHeader(),
+			strings.NewReader("token=123"))
+		is.Equal(http.StatusFound, code)
+		is.Equal("123", c.token)
+
+		is.Equal(q.m, model.Message{
+			"job":   "welcome_email",
+			"email": "me@example.com",
+		})
+	})
+}
+
 // makePostRequest and returns the status code, response header, and the body.
 func makePostRequest(handler http.Handler, target string, header http.Header, body io.Reader) (int, http.Header, string) {
 	req := httptest.NewRequest(http.MethodPost, target, body)

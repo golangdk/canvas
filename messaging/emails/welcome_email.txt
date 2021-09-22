@@ -1,0 +1,7 @@
+Welcome to the Canvas newsletter. We hope you will enjoy it!
+
+You can always visit us at {{base_url}}.
+
+Canvas
+Some Street
+Earth
