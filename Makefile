@@ -10,8 +10,10 @@ cover:
 
 deploy:
 	aws lightsail push-container-image --service-name canvas --label app --image canvas
+	jq <containers.json ".app.image=\"$(image)\"" >containers2.json
+	mv containers2.json containers.json
 	aws lightsail create-container-service-deployment --service-name canvas \
-		--containers '{"app":{"image":"'$(image)'","environment":{"HOST":"","PORT":"8080","LOG_ENV":"production"},"ports":{"8080":"HTTP"}}}' \
+		--containers file://containers.json \
 		--public-endpoint '{"containerName":"app","containerPort":8080,"healthCheck":{"path":"/health"}}'
 
 start:

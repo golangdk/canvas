@@ -2,11 +2,14 @@ package storage
 
 import (
 	"context"
+	"embed"
 	"fmt"
+	"io/fs"
 	"time"
 
 	_ "github.com/jackc/pgx/v4/stdlib"
 	"github.com/jmoiron/sqlx"
+	"github.com/maragudk/migrate"
 	"go.uber.org/zap"
 )
 
@@ -103,4 +106,25 @@ func (d *Database) Ping(ctx context.Context) error {
 	}
 	_, err := d.DB.ExecContext(ctx, `select 1`)
 	return err
+}
+
+//go:embed migrations
+var migrations embed.FS
+
+func (d *Database) MigrateTo(ctx context.Context, version string) error {
+	fsys := d.getMigrations()
+	return migrate.To(ctx, d.DB.DB, fsys, version)
+}
+
+func (d *Database) MigrateUp(ctx context.Context) error {
+	fsys := d.getMigrations()
+	return migrate.Up(ctx, d.DB.DB, fsys)
+}
+
+func (d *Database) getMigrations() fs.FS {
+	fsys, err := fs.Sub(migrations, "migrations")
+	if err != nil {
+		panic(err)
+	}
+	return fsys
 }

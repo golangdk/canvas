@@ -1,0 +1,34 @@
+Resources:
+  AppUser:
+    Type: AWS::IAM::User
+  AppKeys:
+    Type: AWS::IAM::AccessKey
+    Properties:
+      UserName: !Ref AppUser
+  JobsQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: jobs
+      VisibilityTimeout: 60
+      ReceiveMessageWaitTimeSeconds: 20
+  JobsQueuePolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: JobsQueuePolicy
+      Users:
+        - !Ref AppUser
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Resource: !GetAtt JobsQueue.Arn
+            Action:
+              - sqs:GetQueueUrl
+              - sqs:SendMessage
+              - sqs:ReceiveMessage
+              - sqs:DeleteMessage
+Outputs:
+  AccessKeyId:
+    Value: !Ref AppKeys
+  SecretAccessKey:
+    Value: !GetAtt AppKeys.SecretAccessKey

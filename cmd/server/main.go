@@ -63,11 +63,12 @@ func start() int {
 	queue := createQueue(log, awsConfig)
 
 	s := server.New(server.Options{
-		Database: createDatabase(log),
-		Host:     host,
-		Log:      log,
-		Port:     port,
-		Queue:    queue,
+		AdminPassword: env.GetStringOrDefault("ADMIN_PASSWORD", "eyDawVH9LLZtaG2q"),
+		Database:      createDatabase(log),
+		Host:          host,
+		Log:           log,
+		Port:          port,
+		Queue:         queue,
 	})
 
 	r := jobs.NewRunner(jobs.NewRunnerOptions{

@@ -18,20 +18,22 @@ import (
 )
 
 type Server struct {
-	address  string
-	database *storage.Database
-	log      *zap.Logger
-	mux      chi.Router
-	queue    *messaging.Queue
-	server   *http.Server
+	address       string
+	adminPassword string
+	database      *storage.Database
+	log           *zap.Logger
+	mux           chi.Router
+	queue         *messaging.Queue
+	server        *http.Server
 }
 
 type Options struct {
-	Database *storage.Database
-	Host     string
-	Log      *zap.Logger
-	Port     int
-	Queue    *messaging.Queue
+	AdminPassword string
+	Database      *storage.Database
+	Host          string
+	Log           *zap.Logger
+	Port          int
+	Queue         *messaging.Queue
 }
 
 func New(opts Options) *Server {
@@ -42,11 +44,12 @@ func New(opts Options) *Server {
 	address := net.JoinHostPort(opts.Host, strconv.Itoa(opts.Port))
 	mux := chi.NewMux()
 	return &Server{
-		address:  address,
-		database: opts.Database,
-		log:      opts.Log,
-		mux:      mux,
-		queue:    opts.Queue,
+		address:       address,
+		adminPassword: opts.AdminPassword,
+		database:      opts.Database,
+		log:           opts.Log,
+		mux:           mux,
+		queue:         opts.Queue,
 		server: &http.Server{
 			Addr:              address,
 			Handler:           mux,
