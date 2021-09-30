@@ -17,7 +17,7 @@ func (s *Server) setupRoutes() {
 	handlers.NewsletterConfirmed(s.mux)
 
 	s.mux.Group(func(r chi.Router) {
-		r.With(middleware.BasicAuth("canvas", map[string]string{"admin": s.adminPassword}))
+		r.Use(middleware.BasicAuth("canvas", map[string]string{"admin": s.adminPassword}))
 
 		handlers.MigrateTo(r, s.database)
 		handlers.MigrateUp(r, s.database)
