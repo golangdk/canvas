@@ -3,9 +3,12 @@ package jobs
 
 import (
 	"context"
+	"strconv"
 	"sync"
 	"time"
 
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 	"go.uber.org/zap"
 
 	"canvas/messaging"
@@ -14,15 +17,19 @@ import (
 
 // Runner runs jobs.
 type Runner struct {
-	emailer *messaging.Emailer
-	jobs    map[string]Func
-	log     *zap.Logger
-	queue   *messaging.Queue
+	emailer        *messaging.Emailer
+	jobCount       *prometheus.CounterVec
+	jobDurations   *prometheus.CounterVec
+	jobs           map[string]Func
+	log            *zap.Logger
+	queue          *messaging.Queue
+	runnerReceives *prometheus.CounterVec
 }
 
 type NewRunnerOptions struct {
 	Emailer *messaging.Emailer
 	Log     *zap.Logger
+	Metrics *prometheus.Registry
 	Queue   *messaging.Queue
 }
 
@@ -31,11 +38,30 @@ func NewRunner(opts NewRunnerOptions) *Runner {
 		opts.Log = zap.NewNop()
 	}
 
+	if opts.Metrics == nil {
+		opts.Metrics = prometheus.NewRegistry()
+	}
+
+	jobCount := promauto.With(opts.Metrics).NewCounterVec(prometheus.CounterOpts{
+		Name: "app_jobs_total",
+	}, []string{"name", "success"})
+
+	jobDurations := promauto.With(opts.Metrics).NewCounterVec(prometheus.CounterOpts{
+		Name: "app_job_duration_seconds_total",
+	}, []string{"name", "success"})
+
+	runnerReceives := promauto.With(opts.Metrics).NewCounterVec(prometheus.CounterOpts{
+		Name: "app_job_runner_receives_total",
+	}, []string{"success"})
+
 	return &Runner{
-		emailer: opts.Emailer,
-		jobs:    map[string]Func{},
-		log:     opts.Log,
-		queue:   opts.Queue,
+		emailer:        opts.Emailer,
+		jobCount:       jobCount,
+		jobDurations:   jobDurations,
+		jobs:           map[string]Func{},
+		log:            opts.Log,
+		queue:          opts.Queue,
+		runnerReceives: runnerReceives,
 	}
 }
 
@@ -65,6 +91,7 @@ func (r *Runner) Start(ctx context.Context) {
 func (r *Runner) receiveAndRun(ctx context.Context, wg *sync.WaitGroup) {
 	m, receiptID, err := r.queue.Receive(ctx)
 	if err != nil {
+		r.runnerReceives.WithLabelValues("false").Inc()
 		r.log.Info("Error receiving message", zap.Error(err))
 		// Sleep a bit to not hammer the queue if there's an error with it
 		time.Sleep(time.Second)
@@ -73,20 +100,25 @@ func (r *Runner) receiveAndRun(ctx context.Context, wg *sync.WaitGroup) {
 
 	// If there was no message there is nothing to do
 	if m == nil {
+		r.runnerReceives.WithLabelValues("true").Inc()
 		return
 	}
 
 	name, ok := (*m)["job"]
 	if !ok {
+		r.runnerReceives.WithLabelValues("false").Inc()
 		r.log.Info("Error getting job name from message")
 		return
 	}
 
 	job, ok := r.jobs[name]
 	if !ok {
+		r.runnerReceives.WithLabelValues("false").Inc()
 		r.log.Info("No job with this name", zap.String("name", name))
 		return
 	}
+
+	r.runnerReceives.WithLabelValues("true").Inc()
 
 	wg.Add(1)
 	go func() {
@@ -96,17 +128,23 @@ func (r *Runner) receiveAndRun(ctx context.Context, wg *sync.WaitGroup) {
 
 		defer func() {
 			if rec := recover(); rec != nil {
+				r.jobCount.WithLabelValues(name, "false").Inc()
 				log.Info("Recovered from panic in job", zap.Any("recover", rec))
 			}
 		}()
 
 		before := time.Now()
-		if err := job(ctx, *m); err != nil {
+		err := job(ctx, *m)
+		duration := time.Since(before)
+
+		success := strconv.FormatBool(err == nil)
+		r.jobCount.WithLabelValues(name, success).Inc()
+		r.jobDurations.WithLabelValues(name, success).Add(duration.Seconds())
+
+		if err != nil {
 			log.Info("Error running job", zap.Error(err))
 			return
 		}
-		after := time.Now()
-		duration := after.Sub(before)
 		log.Info("Successfully ran job", zap.Duration("duration", duration))
 
 		// We use context.Background as the parent context instead of the existing ctx, because if we've come

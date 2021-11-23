@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/prometheus/client_golang/prometheus"
 	"go.uber.org/zap"
 
 	"canvas/messaging"
@@ -18,22 +19,26 @@ import (
 )
 
 type Server struct {
-	address       string
-	adminPassword string
-	database      *storage.Database
-	log           *zap.Logger
-	mux           chi.Router
-	queue         *messaging.Queue
-	server        *http.Server
+	address         string
+	adminPassword   string
+	database        *storage.Database
+	log             *zap.Logger
+	metricsPassword string
+	metrics         *prometheus.Registry
+	mux             chi.Router
+	queue           *messaging.Queue
+	server          *http.Server
 }
 
 type Options struct {
-	AdminPassword string
-	Database      *storage.Database
-	Host          string
-	Log           *zap.Logger
-	Port          int
-	Queue         *messaging.Queue
+	AdminPassword   string
+	Database        *storage.Database
+	Host            string
+	Log             *zap.Logger
+	MetricsPassword string
+	Metrics         *prometheus.Registry
+	Port            int
+	Queue           *messaging.Queue
 }
 
 func New(opts Options) *Server {
@@ -41,15 +46,21 @@ func New(opts Options) *Server {
 		opts.Log = zap.NewNop()
 	}
 
+	if opts.Metrics == nil {
+		opts.Metrics = prometheus.NewRegistry()
+	}
+
 	address := net.JoinHostPort(opts.Host, strconv.Itoa(opts.Port))
 	mux := chi.NewMux()
 	return &Server{
-		address:       address,
-		adminPassword: opts.AdminPassword,
-		database:      opts.Database,
-		log:           opts.Log,
-		mux:           mux,
-		queue:         opts.Queue,
+		address:         address,
+		adminPassword:   opts.AdminPassword,
+		database:        opts.Database,
+		log:             opts.Log,
+		metricsPassword: opts.MetricsPassword,
+		metrics:         opts.Metrics,
+		mux:             mux,
+		queue:           opts.Queue,
 		server: &http.Server{
 			Addr:              address,
 			Handler:           mux,
@@ -63,10 +74,6 @@ func New(opts Options) *Server {
 
 // Start the Server by setting up routes and listening for HTTP requests on the given address.
 func (s *Server) Start() error {
-	if err := s.database.Connect(); err != nil {
-		return fmt.Errorf("error connecting to database: %w", err)
-	}
-
 	s.setupRoutes()
 
 	s.log.Info("Starting", zap.String("address", s.address))

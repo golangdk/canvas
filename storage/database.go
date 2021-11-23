@@ -10,6 +10,8 @@ import (
 	_ "github.com/jackc/pgx/v4/stdlib"
 	"github.com/jmoiron/sqlx"
 	"github.com/maragudk/migrate"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/collectors"
 	"go.uber.org/zap"
 )
 
@@ -26,6 +28,7 @@ type Database struct {
 	connectionMaxLifetime time.Duration
 	connectionMaxIdleTime time.Duration
 	log                   *zap.Logger
+	metrics               *prometheus.Registry
 }
 
 // NewDatabaseOptions for NewDatabase.
@@ -40,6 +43,7 @@ type NewDatabaseOptions struct {
 	ConnectionMaxLifetime time.Duration
 	ConnectionMaxIdleTime time.Duration
 	Log                   *zap.Logger
+	Metrics               *prometheus.Registry
 }
 
 // NewDatabase with the given options.
@@ -48,6 +52,11 @@ func NewDatabase(opts NewDatabaseOptions) *Database {
 	if opts.Log == nil {
 		opts.Log = zap.NewNop()
 	}
+
+	if opts.Metrics == nil {
+		opts.Metrics = prometheus.NewRegistry()
+	}
+
 	return &Database{
 		host:                  opts.Host,
 		port:                  opts.Port,
@@ -59,6 +68,7 @@ func NewDatabase(opts NewDatabaseOptions) *Database {
 		connectionMaxLifetime: opts.ConnectionMaxLifetime,
 		connectionMaxIdleTime: opts.ConnectionMaxIdleTime,
 		log:                   opts.Log,
+		metrics:               opts.Metrics,
 	}
 }
 
@@ -84,6 +94,8 @@ func (d *Database) Connect() error {
 	d.DB.SetMaxIdleConns(d.maxIdleConnections)
 	d.DB.SetConnMaxLifetime(d.connectionMaxLifetime)
 	d.DB.SetConnMaxIdleTime(d.connectionMaxIdleTime)
+
+	d.metrics.MustRegister(collectors.NewDBStatsCollector(d.DB.DB, d.name))
 
 	return nil
 }
