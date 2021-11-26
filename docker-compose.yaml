@@ -16,6 +16,25 @@ services:
       - 9325:9325
     volumes:
       - ./elasticmq.conf:/opt/elasticmq.conf
+  prometheus:
+    image: prom/prometheus
+    ports:
+      - 9090:9090
+    volumes:
+      - prometheus:/prometheus
+      - ./prometheus/development.yml:/etc/prometheus/prometheus.yml
+  grafana:
+    image: grafana/grafana
+    ports:
+      - 3000:3000
+    depends_on:
+      - prometheus
+    volumes:
+      - grafana:/var/lib/grafana
+      - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+      - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
+      - ./grafana/dashboards:/etc/dashboards
+      - ./grafana/grafana.ini:/etc/grafana/grafana.ini
   postgres-test:
     image: postgres:12
     environment:
@@ -30,3 +49,5 @@ services:
       - 9326:9324
 volumes:
   postgres:
+  prometheus:
+  grafana:

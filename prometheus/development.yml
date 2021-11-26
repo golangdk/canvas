@@ -1,0 +1,11 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: app
+    basic_auth:
+      username: prometheus
+      password: "12345678"
+    static_configs:
+      - targets:
+          - host.docker.internal:8080
