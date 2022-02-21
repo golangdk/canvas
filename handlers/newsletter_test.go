@@ -10,6 +10,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/matryer/is"
+	"go.uber.org/zap"
 
 	"canvas/handlers"
 	"canvas/model"
@@ -37,7 +38,7 @@ func TestNewsletterSignup(t *testing.T) {
 	mux := chi.NewMux()
 	s := &signupperMock{}
 	q := &senderMock{}
-	handlers.NewsletterSignup(mux, s, q)
+	handlers.NewsletterSignup(mux, s, q, zap.NewNop())
 
 	t.Run("signs up a valid email address and sends a message", func(t *testing.T) {
 		is := is.New(t)
@@ -77,7 +78,7 @@ func TestNewsletterConfirm(t *testing.T) {
 		mux := chi.NewMux()
 		c := &confirmerMock{}
 		q := &senderMock{}
-		handlers.NewsletterConfirm(mux, c, q)
+		handlers.NewsletterConfirm(mux, c, q, zap.NewNop())
 
 		code, _, _ := makePostRequest(mux, "/newsletter/confirm", createFormHeader(),
 			strings.NewReader("token=123"))

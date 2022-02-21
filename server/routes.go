@@ -13,9 +13,9 @@ func (s *Server) setupRoutes() {
 	handlers.Health(s.mux, s.database)
 
 	handlers.FrontPage(s.mux)
-	handlers.NewsletterSignup(s.mux, s.database, s.queue)
+	handlers.NewsletterSignup(s.mux, s.database, s.queue, s.log)
 	handlers.NewsletterThanks(s.mux)
-	handlers.NewsletterConfirm(s.mux, s.database, s.queue)
+	handlers.NewsletterConfirm(s.mux, s.database, s.queue, s.log)
 	handlers.NewsletterConfirmed(s.mux)
 
 	s.mux.Group(func(r chi.Router) {
