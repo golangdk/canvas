@@ -1,0 +1,8 @@
+route:
+  receiver: httpbin
+  group_by: ['alertname']
+
+receivers:
+  - name: httpbin
+    webhook_configs:
+      - url: 'https://httpbin.org/post'

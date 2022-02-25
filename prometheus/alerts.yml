@@ -1,0 +1,37 @@
+groups:
+  - name: app
+    rules:
+      - alert: RequestLiveness
+        expr: sum(rate(app_http_requests_total{path!~"/metrics|/health"}[1m]) or vector(0)) == 0
+        for: 5m
+        annotations:
+          summary: No external HTTP requests to app.
+          description: There are no HTTP requests to the app that are not to the /metrics or /health path.
+
+      - alert: RequestInternalErrors
+        expr: sum by (path) (rate(app_http_requests_total{code=~"5.."}[1m])) > 0
+        for: 2m
+        annotations:
+          summary: Internal requests errors at {{$labels.path}}.
+          description: There are HTTP 5xx requests errors. Check your logs.
+
+      - alert: JobRunnerLiveness
+        expr: sum(rate(app_job_runner_receives_total[1m]) or vector(0)) == 0
+        for: 5m
+        annotations:
+          summary: No job runner message checks.
+          description: One or more job runners are not running. Check the logs and perhaps restart the app.
+
+      - alert: JobRunnerErrors
+        expr: sum(rate(app_job_runner_receives_total{success="false"}[1m])) > 0
+        for: 5m
+        annotations:
+          summary: Errors in the job runner.
+          description: The job runner errors either with receiving messages from the queue, or bad job messages. Check your logs.
+
+      - alert: JobErrors
+        expr: sum by (name) (rate(app_jobs_total{success="false"}[5m])) > 0
+        for: 1m
+        annotations:
+          summary: The job {{$labels.name}} is erroring.
+          description: The job {{$labels.name}} is erroring. Check your logs.
