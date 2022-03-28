@@ -27,8 +27,40 @@ Resources:
               - sqs:SendMessage
               - sqs:ReceiveMessage
               - sqs:DeleteMessage
+  AssetsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+  AssetsBucketPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: AssetsBucketPolicy
+      Users:
+        - !Ref AppUser
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Resource:
+              - !GetAtt AssetsBucket.Arn
+              - !Join
+                - /
+                - - !GetAtt AssetsBucket.Arn
+                  - "*"
+            Action:
+              - s3:PutObject
+              - s3:GetObject
+              - s3:DeleteObject
+              - s3:ListBucket
+
 Outputs:
   AccessKeyId:
     Value: !Ref AppKeys
   SecretAccessKey:
     Value: !GetAtt AppKeys.SecretAccessKey
+  BucketName:
+    Value: !Ref AssetsBucket
