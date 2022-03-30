@@ -77,10 +77,11 @@ func (e *Emailer) SendNewsletterConfirmationEmail(ctx context.Context, to model.
 	})
 }
 
-// SendNewsletterWelcomeEmail with just the web app URL.
-func (e *Emailer) SendNewsletterWelcomeEmail(ctx context.Context, to model.Email) error {
+// SendNewsletterWelcomeEmail with the web app URL and the personalized gift URL.
+func (e *Emailer) SendNewsletterWelcomeEmail(ctx context.Context, to model.Email, giftURL string) error {
 	keywords := map[string]string{
 		"base_url": e.baseURL,
+		"gift_url": giftURL,
 	}
 
 	return e.send(ctx, requestBody{

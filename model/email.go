@@ -2,6 +2,7 @@ package model
 
 import (
 	"regexp"
+	"strings"
 )
 
 // emailAddressMatcher for valid email addresses.
@@ -27,4 +28,13 @@ func (e Email) IsValid() bool {
 
 func (e Email) String() string {
 	return string(e)
+}
+
+// Local returns the local part of the email address, before the @ sign.
+// Panics if it's not a valid email address.
+func (e Email) Local() string {
+	if !e.IsValid() {
+		panic("email address is invalid")
+	}
+	return strings.Split(e.String(), "@")[0]
 }

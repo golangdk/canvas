@@ -13,10 +13,12 @@ import (
 
 	"canvas/messaging"
 	"canvas/model"
+	"canvas/storage"
 )
 
 // Runner runs jobs.
 type Runner struct {
+	blobStore      *storage.BlobStore
 	emailer        *messaging.Emailer
 	jobCount       *prometheus.CounterVec
 	jobDurations   *prometheus.CounterVec
@@ -27,10 +29,11 @@ type Runner struct {
 }
 
 type NewRunnerOptions struct {
-	Emailer *messaging.Emailer
-	Log     *zap.Logger
-	Metrics *prometheus.Registry
-	Queue   *messaging.Queue
+	BlobStore *storage.BlobStore
+	Emailer   *messaging.Emailer
+	Log       *zap.Logger
+	Metrics   *prometheus.Registry
+	Queue     *messaging.Queue
 }
 
 func NewRunner(opts NewRunnerOptions) *Runner {
@@ -55,6 +58,7 @@ func NewRunner(opts NewRunnerOptions) *Runner {
 	}, []string{"success"})
 
 	return &Runner{
+		blobStore:      opts.BlobStore,
 		emailer:        opts.Emailer,
 		jobCount:       jobCount,
 		jobDurations:   jobDurations,

@@ -1,5 +1,7 @@
 Welcome to the Canvas newsletter. We hope you will enjoy it!
 
+Here's your personal welcome gift: {{gift_url}}
+
 You can always visit us at {{base_url}}.
 
 Canvas

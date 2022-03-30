@@ -24,6 +24,7 @@ func CreateBlobStore() (*storage.BlobStore, func()) {
 	env.MustLoad("../.env-test")
 
 	blobStore := storage.NewBlobStore(storage.NewBlobStoreOptions{
+		Bucket:    DefaultBucket,
 		Config:    getAWSConfig(),
 		PathStyle: true,
 	})

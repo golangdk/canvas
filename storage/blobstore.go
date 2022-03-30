@@ -11,12 +11,14 @@ import (
 
 // BlobStore is the abstraction for storing binary blobs (arbitrary files) in S3.
 type BlobStore struct {
+	bucket string
 	Client *s3.Client
 	log    *zap.Logger
 }
 
 // NewBlobStoreOptions for NewBlobStore.
 type NewBlobStoreOptions struct {
+	Bucket    string
 	Config    aws.Config
 	Log       *zap.Logger
 	PathStyle bool
@@ -34,6 +36,7 @@ func NewBlobStore(opts NewBlobStoreOptions) *BlobStore {
 	})
 
 	return &BlobStore{
+		bucket: opts.Bucket,
 		Client: client,
 		log:    opts.Log,
 	}

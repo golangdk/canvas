@@ -38,10 +38,14 @@ func SendNewsletterConfirmationEmail(r registry, es newsletterconfirmationEmailS
 }
 
 type newsletterWelcomeEmailSender interface {
-	SendNewsletterWelcomeEmail(ctx context.Context, to model.Email) error
+	SendNewsletterWelcomeEmail(ctx context.Context, to model.Email, giftURL string) error
 }
 
-func SendNewsletterWelcomeEmail(r registry, es newsletterWelcomeEmailSender) {
+type giftCreator interface {
+	CreateAndSaveNewsletterGift(ctx context.Context, name string) (string, error)
+}
+
+func SendNewsletterWelcomeEmail(r registry, es newsletterWelcomeEmailSender, gc giftCreator) {
 	r.Register("welcome_email", func(ctx context.Context, m model.Message) error {
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
@@ -51,7 +55,13 @@ func SendNewsletterWelcomeEmail(r registry, es newsletterWelcomeEmailSender) {
 			return errors.New("no email address in message")
 		}
 
-		if err := es.SendNewsletterWelcomeEmail(ctx, model.Email(to)); err != nil {
+		email := model.Email(to)
+		giftURL, err := gc.CreateAndSaveNewsletterGift(ctx, email.Local())
+		if err != nil {
+			return fmt.Errorf("error creating welcome gift: %w", err)
+		}
+
+		if err := es.SendNewsletterWelcomeEmail(ctx, email, giftURL); err != nil {
 			return fmt.Errorf("error sending newsletter welcome email: %w", err)
 		}
 

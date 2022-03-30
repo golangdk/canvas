@@ -13,6 +13,7 @@ require (
 	github.com/go-chi/chi/v5 v5.0.2
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
 	github.com/golang/protobuf v1.5.2 // indirect
+	github.com/google/uuid v1.3.0
 	github.com/jackc/pgx/v4 v4.11.0
 	github.com/jmoiron/sqlx v1.3.4
 	github.com/maragudk/env v0.1.1
