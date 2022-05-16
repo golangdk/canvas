@@ -1,6 +1,6 @@
 module canvas
 
-go 1.16
+go 1.18
 
 require (
 	github.com/aws/aws-sdk-go-v2 v1.8.1
@@ -15,8 +15,26 @@ require (
 	github.com/maragudk/gomponents-heroicons v0.2.0
 	github.com/maragudk/migrate v0.3.1
 	github.com/matryer/is v1.4.0
-	go.uber.org/multierr v1.6.0 // indirect
 	go.uber.org/zap v1.16.0
 	golang.org/x/crypto v0.0.0-20210616213533-5ff15b29337e // indirect
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
+)
+
+require (
+	github.com/aws/aws-sdk-go-v2/credentials v1.3.3 // indirect
+	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.4.1 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/ini v1.2.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.2.3 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sso v1.3.3 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sts v1.6.2 // indirect
+	github.com/jackc/chunkreader/v2 v2.0.1 // indirect
+	github.com/jackc/pgconn v1.8.1 // indirect
+	github.com/jackc/pgio v1.0.0 // indirect
+	github.com/jackc/pgpassfile v1.0.0 // indirect
+	github.com/jackc/pgproto3/v2 v2.1.0 // indirect
+	github.com/jackc/pgservicefile v0.0.0-20200714003250-2b9c44734f2b // indirect
+	github.com/jackc/pgtype v1.7.0 // indirect
+	go.uber.org/atomic v1.7.0 // indirect
+	go.uber.org/multierr v1.6.0 // indirect
+	golang.org/x/text v0.3.6 // indirect
 )
