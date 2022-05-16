@@ -73,8 +73,6 @@ services:
       MINIO_ROOT_PASSWORD: secretsecret
     ports:
       - 9002:9000
-    volumes:
-      - minio:/data
     command: server /data
 volumes:
   postgres:
