@@ -278,16 +278,16 @@ func writeJSON(w io.Writer, v any) {
 	}
 }
 
-// errorResponse makes sure the wrapped error's Error() method is called and the result returned.
+// errorResponse just wraps an error.
 type errorResponse struct {
 	Error jsonError
 }
 
+// jsonError is a wrapper around an error which makes sure the error message is serialized properly.
 type jsonError struct {
 	Err error
 }
 
-// MarshalJSON makes sure the error message is serialized properly.
 func (e jsonError) MarshalJSON() ([]byte, error) {
 	return json.Marshal(e.Err.Error())
 }
