@@ -2,9 +2,7 @@ package handlers_test
 
 import (
 	"context"
-	"io"
 	"net/http"
-	"net/http/httptest"
 	"strings"
 	"testing"
 
@@ -90,20 +88,6 @@ func TestNewsletterConfirm(t *testing.T) {
 			"email": "me@example.com",
 		})
 	})
-}
-
-// makePostRequest and returns the status code, response header, and the body.
-func makePostRequest(handler http.Handler, target string, header http.Header, body io.Reader) (int, http.Header, string) {
-	req := httptest.NewRequest(http.MethodPost, target, body)
-	req.Header = header
-	res := httptest.NewRecorder()
-	handler.ServeHTTP(res, req)
-	result := res.Result()
-	bodyBytes, err := io.ReadAll(result.Body)
-	if err != nil {
-		panic(err)
-	}
-	return result.StatusCode, result.Header, string(bodyBytes)
 }
 
 func createFormHeader() http.Header {

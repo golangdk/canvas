@@ -3,9 +3,7 @@ package handlers_test
 import (
 	"context"
 	"errors"
-	"io"
 	"net/http"
-	"net/http/httptest"
 	"testing"
 
 	"github.com/go-chi/chi/v5"
@@ -40,17 +38,4 @@ func TestHealth(t *testing.T) {
 		code, _, _ := makeGetRequest(mux, "/health")
 		is.Equal(http.StatusBadGateway, code)
 	})
-}
-
-// makeGetRequest and returns the status code, response headers, and the body.
-func makeGetRequest(handler http.Handler, target string) (int, http.Header, string) {
-	req := httptest.NewRequest(http.MethodGet, target, nil)
-	res := httptest.NewRecorder()
-	handler.ServeHTTP(res, req)
-	result := res.Result()
-	bodyBytes, err := io.ReadAll(result.Body)
-	if err != nil {
-		panic(err)
-	}
-	return result.StatusCode, result.Header, string(bodyBytes)
 }

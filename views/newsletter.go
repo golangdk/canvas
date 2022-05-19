@@ -1,8 +1,12 @@
 package views
 
 import (
+	"strings"
+
 	g "github.com/maragudk/gomponents"
 	. "github.com/maragudk/gomponents/html"
+
+	"canvas/model"
 )
 
 func NewsletterThanksPage(path string) g.Node {
@@ -34,5 +38,48 @@ func NewsletterConfirmedPage(path string) g.Node {
 		path,
 		H1(g.Text(`Newsletter subscription confirmed`)),
 		P(g.Textf(`You will now receive the newsletter. 😎`)),
+	)
+}
+
+func NewslettersPage(path string, newsletters []model.Newsletter) g.Node {
+	return Page(
+		"Newsletters",
+		path,
+		H1(g.Text(`Newsletters`)),
+		P(Class("lead"),
+			g.Text("This is our newsletter archive. Click the link beneath the title to read the newsletter."),
+		),
+		g.Group(g.Map(len(newsletters), func(i int) g.Node {
+			return NewsletterSummary(newsletters[i])
+		})),
+	)
+}
+
+const timeFormat = "Monday January 2 2006 at 15:04:05 MST"
+
+func NewsletterSummary(n model.Newsletter) g.Node {
+	return Div(
+		H2(g.Text(n.Title)),
+		P(g.Textf("From %v.", n.Created.Format(timeFormat))),
+		P(A(Href("/newsletters?id="+n.ID), g.Textf("Read “%v”.", n.Title))),
+	)
+}
+
+func NewsletterPage(path string, n model.Newsletter) g.Node {
+	paragraphs := strings.Split(n.Body, "\n\n")
+	return Page(
+		n.Title,
+		path,
+		H1(g.Text(n.Title)),
+		P(
+			g.Textf("Published %v.", n.Created.Format(timeFormat)),
+			g.If(n.Updated.After(n.Created),
+				g.Textf(" Last updated %v.", n.Updated.Format(timeFormat)),
+			),
+		),
+		g.Group(g.Map(len(paragraphs), func(i int) g.Node {
+			return P(g.Text(paragraphs[i]))
+		})),
+		P(A(Href("/newsletters"), g.Text("Go back to the overview."))),
 	)
 }
