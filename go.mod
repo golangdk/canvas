@@ -17,8 +17,8 @@ require (
 	github.com/jackc/pgx/v4 v4.11.0
 	github.com/jmoiron/sqlx v1.3.4
 	github.com/maragudk/env v0.1.1
-	github.com/maragudk/gomponents v0.16.0
-	github.com/maragudk/gomponents-heroicons v0.2.0
+	github.com/maragudk/gomponents v0.18.0
+	github.com/maragudk/gomponents-heroicons v0.3.0
 	github.com/maragudk/migrate v0.3.1
 	github.com/matryer/is v1.4.0
 	github.com/prometheus/client_golang v1.11.0
