@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/matryer/is"
 
@@ -103,5 +104,54 @@ func TestSendNewsletterWelcomeEmail(t *testing.T) {
 
 		err := job(context.Background(), model.Message{"email": "you@example.com"})
 		is.True(err != nil)
+	})
+}
+
+type mockNewsletterEmailer struct {
+	to    model.Email
+	title string
+	body  string
+}
+
+func (m *mockNewsletterEmailer) SendNewsletterEmail(ctx context.Context, to model.Email, title, body string) error {
+	m.to = to
+	m.title = title
+	m.body = body
+	return nil
+}
+
+type mockNewsletterGetter struct {
+	id string
+}
+
+func (m *mockNewsletterGetter) GetNewsletter(ctx context.Context, id string) (*model.Newsletter, error) {
+	m.id = id
+	return &model.Newsletter{
+		ID:      id,
+		Title:   "Hey",
+		Body:    "You.",
+		Created: time.Time{},
+		Updated: time.Time{},
+	}, nil
+}
+
+func TestSendNewsletter(t *testing.T) {
+	r := testRegistry{}
+
+	t.Run("gets the newsletter from the database by ID and sends its content", func(t *testing.T) {
+		is := is.New(t)
+
+		emailer := &mockNewsletterEmailer{}
+		ng := &mockNewsletterGetter{}
+		jobs.SendNewsletter(r, emailer, ng)
+		job := r["newsletter_email"]
+		err := job(context.Background(), model.Message{"id": "123", "email": "you@example.com"})
+		is.NoErr(err)
+
+		is.Equal(ng.id, "123")
+
+		is.Equal(emailer.to.String(), "you@example.com")
+		is.Equal(emailer.title, "Hey")
+		is.Equal(emailer.body, "You.")
 	})
 }

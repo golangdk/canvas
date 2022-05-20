@@ -19,6 +19,7 @@ import (
 // Runner runs jobs.
 type Runner struct {
 	blobStore      *storage.BlobStore
+	database       *storage.Database
 	emailer        *messaging.Emailer
 	jobCount       *prometheus.CounterVec
 	jobDurations   *prometheus.CounterVec
@@ -30,6 +31,7 @@ type Runner struct {
 
 type NewRunnerOptions struct {
 	BlobStore *storage.BlobStore
+	Database  *storage.Database
 	Emailer   *messaging.Emailer
 	Log       *zap.Logger
 	Metrics   *prometheus.Registry
@@ -59,6 +61,7 @@ func NewRunner(opts NewRunnerOptions) *Runner {
 
 	return &Runner{
 		blobStore:      opts.BlobStore,
+		database:       opts.Database,
 		emailer:        opts.Emailer,
 		jobCount:       jobCount,
 		jobDurations:   jobDurations,

@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"path"
 	"strings"
 	"time"
 
@@ -26,6 +27,9 @@ type nameAndEmail = string
 
 //go:embed emails
 var emails embed.FS
+
+//go:embed layouts
+var layouts embed.FS
 
 // Emailer can send transactional and marketing emails through Postmark.
 // See https://postmarkapp.com/developer
@@ -94,6 +98,23 @@ func (e *Emailer) SendNewsletterWelcomeEmail(ctx context.Context, to model.Email
 	})
 }
 
+func (e *Emailer) SendNewsletterEmail(ctx context.Context, to model.Email, title, body string) error {
+	keywords := map[string]string{
+		"base_url": e.baseURL,
+		"title":    title,
+		"body":     body,
+	}
+
+	return e.send(ctx, requestBody{
+		MessageStream: marketingMessageStream,
+		From:          e.marketingFrom,
+		To:            to.String(),
+		Subject:       title,
+		HtmlBody:      getEmail("newsletter_email.html", keywords),
+		TextBody:      getEmail("newsletter_email.txt", keywords),
+	})
+}
+
 // requestBody used in Emailer.send.
 // See https://postmarkapp.com/developer/user-guide/send-email-with-api
 type requestBody struct {
@@ -149,16 +170,24 @@ func createNameAndEmail(name, email string) nameAndEmail {
 
 // getEmail from the given path, panicking on errors.
 // It also replaces keywords given in the map.
-func getEmail(path string, keywords map[string]string) string {
-	email, err := emails.ReadFile("emails/" + path)
+func getEmail(p string, keywords map[string]string) string {
+	layout, err := layouts.ReadFile("layouts/default" + path.Ext(p))
 	if err != nil {
 		panic(err)
 	}
 
-	emailString := string(email)
+	email, err := emails.ReadFile("emails/" + p)
+	if err != nil {
+		panic(err)
+	}
+
+	emailString := strings.ReplaceAll(string(layout), "{{content}}", string(email))
 	for keyword, replacement := range keywords {
 		emailString = strings.ReplaceAll(emailString, "{{"+keyword+"}}", replacement)
 	}
+
+	// Replace the preheader keyword if it's still in because it wasn't given in keywords
+	emailString = strings.ReplaceAll(emailString, "{{preheader}}", "")
 
 	return emailString
 }

@@ -87,6 +87,7 @@ func start() int {
 
 	r := jobs.NewRunner(jobs.NewRunnerOptions{
 		BlobStore: createBlobStore(log, awsConfig),
+		Database:  db,
 		Emailer:   createEmailer(log, host, port),
 		Log:       log,
 		Metrics:   registry,
