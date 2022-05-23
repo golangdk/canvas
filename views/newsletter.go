@@ -1,9 +1,11 @@
 package views
 
 import (
+	"net/url"
 	"strings"
 
 	g "github.com/maragudk/gomponents"
+	"github.com/maragudk/gomponents-heroicons/solid"
 	. "github.com/maragudk/gomponents/html"
 
 	"canvas/model"
@@ -41,7 +43,7 @@ func NewsletterConfirmedPage(path string) g.Node {
 	)
 }
 
-func NewslettersPage(path string, newsletters []model.Newsletter) g.Node {
+func NewslettersPage(path string, newsletters []model.Newsletter, search string) g.Node {
 	return Page(
 		"Newsletters",
 		path,
@@ -49,23 +51,46 @@ func NewslettersPage(path string, newsletters []model.Newsletter) g.Node {
 		P(Class("lead"),
 			g.Text("This is our newsletter archive. Click the link beneath the title to read the newsletter."),
 		),
+
+		FormEl(Action("/newsletters"), Method("get"), Class("flex items-center max-w-md"),
+			Label(For("search"), Class("sr-only"), g.Text("Search")),
+			Div(Class("relative rounded-md shadow-sm flex-grow"),
+				Div(Class("absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"),
+					solid.Search(Class("h-5 w-5 text-gray-400")),
+				),
+				Input(Type("text"), Name("search"), ID("search"), Value(search), TabIndex("1"),
+					Class("focus:ring-gray-500 focus:border-gray-500 block w-full pl-10 text-sm border-gray-300 rounded-md")),
+			),
+		),
+
+		g.If(search != "",
+			P(g.Textf(`%v search result%v for your search on `, len(newsletters), plural(len(newsletters))), Strong(g.Text(search))),
+		),
+
 		g.Group(g.Map(len(newsletters), func(i int) g.Node {
-			return NewsletterSummary(newsletters[i])
+			return NewsletterSummary(newsletters[i], search)
 		})),
 	)
 }
 
+func plural(i int) string {
+	if i == 1 {
+		return ""
+	}
+	return "s"
+}
+
 const timeFormat = "Monday January 2 2006 at 15:04:05 MST"
 
-func NewsletterSummary(n model.Newsletter) g.Node {
+func NewsletterSummary(n model.Newsletter, search string) g.Node {
 	return Div(
 		H2(g.Text(n.Title)),
 		P(g.Textf("From %v.", n.Created.Format(timeFormat))),
-		P(A(Href("/newsletters?id="+n.ID), g.Textf("Read “%v”.", n.Title))),
+		P(A(Href("/newsletters?id="+n.ID+"&search="+url.QueryEscape(search)), g.Textf("Read “%v”.", n.Title))),
 	)
 }
 
-func NewsletterPage(path string, n model.Newsletter) g.Node {
+func NewsletterPage(path string, n model.Newsletter, search string) g.Node {
 	paragraphs := strings.Split(n.Body, "\n\n")
 	return Page(
 		n.Title,
@@ -80,6 +105,12 @@ func NewsletterPage(path string, n model.Newsletter) g.Node {
 		g.Group(g.Map(len(paragraphs), func(i int) g.Node {
 			return P(g.Text(paragraphs[i]))
 		})),
-		P(A(Href("/newsletters"), g.Text("Go back to the overview."))),
+		g.If(search == "",
+			P(A(Href("/newsletters"), g.Text("Go back to the overview."))),
+		),
+		g.If(search != "",
+			P(A(Href("/newsletters?search="+url.QueryEscape(search)),
+				g.Text("Go back to your search for "), Em(g.Text(search)), g.Text("."))),
+		),
 	)
 }

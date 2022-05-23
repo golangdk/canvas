@@ -1,0 +1,1 @@
+drop index newsletters_to_tsvector_idx;

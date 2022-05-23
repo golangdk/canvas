@@ -135,3 +135,19 @@ func (d *Database) DeleteNewsletter(ctx context.Context, id string) (*model.News
 	}
 	return &n, nil
 }
+
+// SearchNewsletters with the given search query, and order by relevancy.
+// Note that the searchtext should match the search index from the table exactly, or the search will not use the index.
+// See https://www.postgresql.org/docs/current/textsearch.html
+func (d *Database) SearchNewsletters(ctx context.Context, searchQuery string) ([]model.Newsletter, error) {
+	var newsletters []model.Newsletter
+	query := `
+		select id, title, body, created, updated
+		from newsletters,
+			websearch_to_tsquery('english', $1) searchquery,
+			to_tsvector('english', title || ' ' || body) searchtext
+		where searchquery @@ searchtext
+		order by ts_rank(searchtext, searchquery) desc`
+	err := d.DB.SelectContext(ctx, &newsletters, query, searchQuery)
+	return newsletters, err
+}

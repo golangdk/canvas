@@ -104,11 +104,14 @@ func NewsletterConfirmed(mux chi.Router) {
 type getter interface {
 	GetNewsletter(ctx context.Context, id string) (*model.Newsletter, error)
 	GetNewsletters(ctx context.Context) ([]model.Newsletter, error)
+	SearchNewsletters(ctx context.Context, searchQuery string) ([]model.Newsletter, error)
 }
 
 func Newsletters(mux chi.Router, g getter, log *zap.Logger) {
 	mux.Get("/newsletters", func(w http.ResponseWriter, r *http.Request) {
 		id := model.UUID(r.URL.Query().Get("id"))
+		search := r.URL.Query().Get("search")
+
 		if id != "" {
 			if !id.IsValid() {
 				http.NotFound(w, r)
@@ -125,16 +128,24 @@ func Newsletters(mux chi.Router, g getter, log *zap.Logger) {
 				http.NotFound(w, r)
 				return
 			}
-			_ = views.NewsletterPage("/newsletters", *n).Render(w)
+			_ = views.NewsletterPage("/newsletters", *n, search).Render(w)
 			return
 		}
 
-		newsletters, err := g.GetNewsletters(r.Context())
+		var newsletters []model.Newsletter
+		var err error
+
+		if search != "" {
+			newsletters, err = g.SearchNewsletters(r.Context(), search)
+		} else {
+			newsletters, err = g.GetNewsletters(r.Context())
+		}
 		if err != nil {
-			log.Info("Error getting newsletters", zap.Error(err))
+			log.Info("Error getting/searching newsletters", zap.Error(err))
 			http.Error(w, "error getting newsletters, refresh to try again", http.StatusBadGateway)
 			return
 		}
-		_ = views.NewslettersPage("/newsletters", newsletters).Render(w)
+
+		_ = views.NewslettersPage("/newsletters", newsletters, search).Render(w)
 	})
 }

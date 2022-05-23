@@ -206,3 +206,31 @@ func TestDatabase_DeleteNewsletter(t *testing.T) {
 		is.True(n4 == nil)
 	})
 }
+
+func TestDatabase_SearchNewsletters(t *testing.T) {
+	integrationtest.SkipIfShort(t)
+
+	t.Run("searches newsletter titles and body texts for search query", func(t *testing.T) {
+		is := is.New(t)
+		db, cleanup := integrationtest.CreateDatabase()
+		defer cleanup()
+
+		_, err := db.CreateNewsletter(context.Background(), "Welcome to Canvas",
+			"This is Canvas. We think it's great. We hope you do, too.")
+		is.NoErr(err)
+
+		_, err = db.CreateNewsletter(context.Background(), "Have you tried Canvas yet?",
+			"Maybe now is the best time.")
+		is.NoErr(err)
+
+		_, err = db.CreateNewsletter(context.Background(), "Canvas!",
+			"It's sweeeeet. Try it, try it!")
+		is.NoErr(err)
+
+		newsletters, err := db.SearchNewsletters(context.Background(), "try")
+		is.NoErr(err)
+		is.Equal(len(newsletters), 2)
+		is.Equal(newsletters[0].Title, "Canvas!")
+		is.Equal(newsletters[1].Title, "Have you tried Canvas yet?")
+	})
+}
