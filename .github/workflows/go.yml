@@ -23,11 +23,7 @@ jobs:
         env:
           POSTGRES_USER: test
           POSTGRES_PASSWORD: 123
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+        options: --health-cmd pg_isready --health-interval 5s --health-timeout 4s --health-retries 5
       elasticmq:
         image: softwaremill/elasticmq-native
         ports:
@@ -39,11 +35,14 @@ jobs:
         env:
           MINIO_ROOT_USER: access
           MINIO_ROOT_PASSWORD: secretsecret
+        options: --health-cmd "curl http://localhost:9002/minio/health/live" --health-interval 5s --health-timeout 4s --health-retries 5
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v3
 
-      - uses: actions/setup-go@v3
+      - name: Setup Go
+        uses: actions/setup-go@v3
         with:
           go-version-file: go.mod
           check-latest: true
