@@ -28,7 +28,7 @@ jobs:
         image: softwaremill/elasticmq-native
         ports:
           - 9326:9324
-        options: --health-cmd "curl http://localhost:9326" --health-interval 5s --health-timeout 4s --health-retries 5
+        options: --health-cmd "curl http://localhost:9324" --health-interval 5s --health-timeout 4s --health-retries 5
       minio:
         image: markuswustenberg/minio
         ports:
@@ -36,7 +36,7 @@ jobs:
         env:
           MINIO_ROOT_USER: access
           MINIO_ROOT_PASSWORD: secretsecret
-        options: --health-cmd "curl http://localhost:9002/minio/health/live" --health-interval 5s --health-timeout 4s --health-retries 5
+        options: --health-cmd "curl http://localhost:9000/minio/health/live" --health-interval 5s --health-timeout 4s --health-retries 5
 
     steps:
       - name: Checkout
