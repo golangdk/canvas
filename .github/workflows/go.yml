@@ -1,0 +1,58 @@
+name: Go
+
+on:
+  push:
+    branches: [ $default-branch ]
+  pull_request:
+    branches: [ $default-branch ]
+
+concurrency:
+  group: ${{ github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:12
+        ports:
+          - 5433:5432
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: 123
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      elasticmq:
+        image: softwaremill/elasticmq-native
+        ports:
+          - 9326:9324
+      minio:
+        image: minio/minio
+        ports:
+          - 9002:9000
+        env:
+          MINIO_ROOT_USER: access
+          MINIO_ROOT_PASSWORD: secretsecret
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-go@v3
+        with:
+          go-version-file: go.mod
+          check-latest: true
+
+      - name: Get dependencies
+        run: go mod download
+
+      - name: Build
+        run: go build -v -o server.bin ./cmd/server
+
+      - name: Test
+        run: go test -v -p 1 -shuffle on ./...
