@@ -1,0 +1,76 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Build
+        run: docker build .
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:12
+        ports:
+          - 5433:5432
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: 123
+          POSTGRES_DB: template1
+        options: --health-cmd pg_isready --health-interval 5s --health-timeout 4s --health-retries 5
+      elasticmq:
+        image: softwaremill/elasticmq-native
+        ports:
+          - 9326:9324
+        options: --health-cmd "nc localhost 9324 || exit 1" --health-interval 5s --health-timeout 4s --health-retries 5
+      minio:
+        image: maragudk/minio-ci
+        ports:
+          - 9002:9000
+        env:
+          MINIO_ROOT_USER: access
+          MINIO_ROOT_PASSWORD: secretsecret
+        options: --health-cmd "curl http://localhost:9000/minio/health/live || exit 1" --health-interval 5s --health-timeout 4s --health-retries 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Go
+        uses: actions/setup-go@v3
+        with:
+          go-version-file: go.mod
+          check-latest: true
+
+      - name: Get dependency cache dir
+        run: echo "GOMODCACHE=`go env GOMODCACHE`" >> $GITHUB_ENV
+
+      - name: Cache dependencies
+        uses: actions/cache@v3
+        with:
+          path: ${{ env.GOMODCACHE }}
+          key: ${{ hashFiles('go.sum') }}
+
+      - name: Get dependencies
+        run: go mod download
+
+      - name: Test
+        run: go test -v -p 1 -shuffle on ./...
