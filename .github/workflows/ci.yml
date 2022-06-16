@@ -1,16 +1,30 @@
-name: Go
+name: CI
 
 on:
   push:
-    branches: [ $default-branch ]
+    branches:
+      - main
   pull_request:
-    branches: [ $default-branch, search ]
+    branches:
+      - main
+      - search
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref_name }}
   cancel-in-progress: true
 
 jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Build
+        run: docker build .
+
   test:
     name: Test
     runs-on: ubuntu-latest
@@ -23,6 +37,7 @@ jobs:
         env:
           POSTGRES_USER: test
           POSTGRES_PASSWORD: 123
+          POSTGRES_DB: template1
         options: --health-cmd pg_isready --health-interval 5s --health-timeout 4s --health-retries 5
       elasticmq:
         image: softwaremill/elasticmq-native
@@ -47,11 +62,17 @@ jobs:
           go-version-file: go.mod
           check-latest: true
 
+      - name: Get dependency cache dir
+        run: echo "GOMODCACHE=`go env GOMODCACHE`" >> $GITHUB_ENV
+
+      - name: Cache dependencies
+        uses: actions/cache@v3
+        with:
+          path: ${{ env.GOMODCACHE }}
+          key: ${{ hashFiles('go.sum') }}
+
       - name: Get dependencies
         run: go mod download
-
-      - name: Build
-        run: go build -v -o server.bin ./cmd/server
 
       - name: Test
         run: go test -v -p 1 -shuffle on ./...
