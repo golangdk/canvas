@@ -40,7 +40,7 @@ jobs:
         image: softwaremill/elasticmq-native
         ports:
           - 9326:9324
-        options: --health-cmd "curl http://localhost:9326" --health-interval 5s --health-timeout 4s --health-retries 5
+        options: --health-cmd "curl http://localhost:9324" --health-interval 5s --health-timeout 4s --health-retries 5
       minio:
         image: maragudk/minio-ci
         ports:
