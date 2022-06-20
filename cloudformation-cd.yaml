@@ -1,0 +1,29 @@
+Resources:
+  CDUser:
+    Type: AWS::IAM::User
+  CDKeys:
+    Type: AWS::IAM::AccessKey
+    Properties:
+      UserName: !Ref CDUser
+  LightsailCDAccessPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: LightsailCDAccessPolicy
+      Users:
+        - !Ref CDUser
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Resource: "*"
+            Action:
+              - lightsail:CreateContainerServiceDeployment
+              - lightsail:CreateContainerServiceRegistryLogin
+              - lightsail:GetContainerImages
+              - lightsail:GetContainerServiceDeployments
+              - lightsail:RegisterContainerImage
+Outputs:
+  AccessKeyId:
+    Value: !Ref CDKeys
+  SecretAccessKey:
+    Value: !GetAtt CDKeys.SecretAccessKey

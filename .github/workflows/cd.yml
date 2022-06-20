@@ -1,0 +1,86 @@
+name: CD
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: cd
+
+env:
+  AWS_REGION: eu-central-1
+  LIGHTSAIL_SERVICE: canvas
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Lightsail CLI
+        run: |
+          curl "https://s3.us-west-2.amazonaws.com/lightsailctl/latest/linux-amd64/lightsailctl" -o "/usr/local/bin/lightsailctl"
+          chmod +x /usr/local/bin/lightsailctl
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.CD_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.CD_AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Build app
+        run: docker build -t app .
+
+      - name: Build Prometheus
+        run: docker build -t prometheus prometheus
+
+      - name: Push app container image
+        run: >
+          aws lightsail push-container-image
+          --service-name ${{ env.LIGHTSAIL_SERVICE }}
+          --label app
+          --image app
+
+      - name: Push Prometheus container image
+        run: >
+          aws lightsail push-container-image
+          --service-name ${{ env.LIGHTSAIL_SERVICE }}
+          --label prometheus
+          --image prometheus
+
+      - name: Get app container image name
+        run: >
+          echo "LIGHTSAIL_APP_IMAGE_NAME=`
+          aws lightsail get-container-images --service-name ${{ env.LIGHTSAIL_SERVICE }} |
+          jq -r '.containerImages[].image' |
+          grep app |
+          head -n 1
+          `" >> $GITHUB_ENV
+
+      - name: Get Prometheus container image name
+        run: >
+          echo "LIGHTSAIL_PROMETHEUS_IMAGE_NAME=`
+          aws lightsail get-container-images --service-name ${{ env.LIGHTSAIL_SERVICE }} |
+          jq -r '.containerImages[].image' |
+          grep prometheus |
+          head -n 1
+          `" >> $GITHUB_ENV
+
+      - name: Create containers configuration
+        run: >
+          aws lightsail get-container-service-deployments --service-name ${{ env.LIGHTSAIL_SERVICE }} |
+          jq '.deployments[] | select(.state == "ACTIVE").containers' |
+          jq '.app.image="${{ env.LIGHTSAIL_APP_IMAGE_NAME }}" | .prometheus.image="${{ env.LIGHTSAIL_PROMETHEUS_IMAGE_NAME }}"'
+          >containers.json
+
+      - name: Deploy
+        run: >
+          aws lightsail create-container-service-deployment --service-name ${{ env.LIGHTSAIL_SERVICE }}
+          --containers file://containers.json
+          --public-endpoint '{"containerName":"app","containerPort":8080,"healthCheck":{"path":"/health"}}'
