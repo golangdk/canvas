@@ -67,8 +67,8 @@ func NewslettersPage(path string, newsletters []model.Newsletter, search string)
 			P(g.Textf(`%v search result%v for your search on `, len(newsletters), plural(len(newsletters))), Strong(g.Text(search))),
 		),
 
-		g.Group(g.Map(len(newsletters), func(i int) g.Node {
-			return NewsletterSummary(newsletters[i], search)
+		g.Group(g.Map(newsletters, func(n model.Newsletter) g.Node {
+			return NewsletterSummary(n)
 		})),
 	)
 }
@@ -102,8 +102,8 @@ func NewsletterPage(path string, n model.Newsletter, search string) g.Node {
 				g.Textf(" Last updated %v.", n.Updated.Format(timeFormat)),
 			),
 		),
-		g.Group(g.Map(len(paragraphs), func(i int) g.Node {
-			return P(g.Text(paragraphs[i]))
+		g.Group(g.Map(paragraphs, func(p string) g.Node {
+			return P(g.Text(p))
 		})),
 		g.If(search == "",
 			P(A(Href("/newsletters"), g.Text("Go back to the overview."))),
