@@ -49,8 +49,8 @@ func NewslettersPage(path string, newsletters []model.Newsletter) g.Node {
 		P(Class("lead"),
 			g.Text("This is our newsletter archive. Click the link beneath the title to read the newsletter."),
 		),
-		g.Group(g.Map(len(newsletters), func(i int) g.Node {
-			return NewsletterSummary(newsletters[i])
+		g.Group(g.Map(newsletters, func(n model.Newsletter) g.Node {
+			return NewsletterSummary(n)
 		})),
 	)
 }
@@ -77,8 +77,8 @@ func NewsletterPage(path string, n model.Newsletter) g.Node {
 				g.Textf(" Last updated %v.", n.Updated.Format(timeFormat)),
 			),
 		),
-		g.Group(g.Map(len(paragraphs), func(i int) g.Node {
-			return P(g.Text(paragraphs[i]))
+		g.Group(g.Map(paragraphs, func(p string) g.Node {
+			return P(g.Text(p))
 		})),
 		P(A(Href("/newsletters"), g.Text("Go back to the overview."))),
 	)
