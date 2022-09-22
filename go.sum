@@ -327,10 +327,10 @@ github.com/lightstep/lightstep-tracer-go v0.18.1/go.mod h1:jlF1pusYV4pidLvZ+XD0U
 github.com/lyft/protoc-gen-validate v0.0.13/go.mod h1:XbGvPuh87YZc5TdIa2/I4pLk0QoUACkjt2znoq26NVQ=
 github.com/maragudk/env v0.1.1 h1:AInSIkcHzhvmu0uUd3BfygEFPzg0+jB96SVgm+8EfvI=
 github.com/maragudk/env v0.1.1/go.mod h1:+dhH74fr8HFFKFSw/RHUoWtUQ2CmF+K4YNZE6W3gQQ4=
-github.com/maragudk/gomponents v0.18.0 h1:EcdeRUWsWW6hK9ftnGAoyXR00SQWecCBxuXghQvdEcc=
-github.com/maragudk/gomponents v0.18.0/go.mod h1:0OdlqOoqxcwvhBFrp8wlKHnEXhNB7IVhb8GuARmd+tI=
-github.com/maragudk/gomponents-heroicons v0.3.0 h1:/1gmosQE3bh5ZExxBojbSHLG09tg6oW3+QB7GD6eDec=
-github.com/maragudk/gomponents-heroicons v0.3.0/go.mod h1:neB/SXe/CqtjveyXr1M1UneHKn3UkplNoKJPOLM0JHU=
+github.com/maragudk/gomponents v0.19.0 h1:OtcWjsavl4in6o8ZE8tX21b8Dk0sgm85PH/F5LWPVzg=
+github.com/maragudk/gomponents v0.19.0/go.mod h1:nHkNnZL6ODgMBeJhrZjkMHVvNdoYsfmpKB2/hjdQ0Hg=
+github.com/maragudk/gomponents-heroicons v0.4.0 h1:B5X1rHupWcMgn4edqKyyQL5OmNzyIdpHimTzyDX7cjE=
+github.com/maragudk/gomponents-heroicons v0.4.0/go.mod h1:kWbLrt7ZSKKn7aFz15uM7ybhjC5v97IxJRxJMnn1FPs=
 github.com/maragudk/migrate v0.3.1 h1:PJ4nkjSabBcWmN+GlXdF+L+JPnbYjFbTrZAtsPUNORw=
 github.com/maragudk/migrate v0.3.1/go.mod h1:vhmL4s+Xz75KU6DPZWRfqb45YyqjYQfcXliA1DsYzvY=
 github.com/matryer/is v1.4.0 h1:sosSmIWwkYITGrxZ25ULNDeKiMNzFSr4V/eqBQP0PeE=
