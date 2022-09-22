@@ -68,7 +68,7 @@ func NewslettersPage(path string, newsletters []model.Newsletter, search string)
 		),
 
 		g.Group(g.Map(newsletters, func(n model.Newsletter) g.Node {
-			return NewsletterSummary(n)
+			return NewsletterSummary(n, search)
 		})),
 	)
 }
