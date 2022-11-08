@@ -47,23 +47,27 @@ func start() int {
 		Port: port,
 	})
 
-	var eg errgroup.Group
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGTERM, syscall.SIGINT)
 	defer stop()
+	eg, ctx := errgroup.WithContext(ctx)
 
 	eg.Go(func() error {
-		<-ctx.Done()
+		if err := s.Start(); err != nil {
+			log.Info("Error starting server", zap.Error(err))
+			return err
+		}
+		return nil
+	})
+
+	<-ctx.Done()
+
+	eg.Go(func() error {
 		if err := s.Stop(); err != nil {
 			log.Info("Error stopping server", zap.Error(err))
 			return err
 		}
 		return nil
 	})
-
-	if err := s.Start(); err != nil {
-		log.Info("Error starting server", zap.Error(err))
-		return 1
-	}
 
 	if err := eg.Wait(); err != nil {
 		return 1
